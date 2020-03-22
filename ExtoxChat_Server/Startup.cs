@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -11,6 +11,8 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using ExtoxChat_Server.Hubs;
+using Microsoft.EntityFrameworkCore;
+using ExtoxChat_Server.Data;
 
 namespace ExtoxChat_Server
 {
@@ -28,6 +30,35 @@ namespace ExtoxChat_Server
         {
             services.AddControllers();
             services.AddSignalR();
+
+            services.AddDbContext<ExtoxChat_ServerContext>(options =>
+                    options.UseSqlServer(Configuration.GetConnectionString("ExtoxChat_ServerContext")));
+/*            services.AddSignalR()
+                .AddMessagePackProtocol()
+                .AddStackExchangeRedis(o =>
+                {
+                    o.ConnectionFactory = async writer =>
+                    {
+                        var config = new ConfigurationOptions
+                        {
+                            AbortOnConnectFail = false
+                        };
+                        config.EndPoints.Add(IPAddress.Loopback, 0);
+                        config.SetDefaultPorts();
+                        var connection = await ConnectionMultiplexer.ConnectAsync(config, writer);
+                        connection.ConnectionFailed += (_, e) =>
+                        {
+                            Console.WriteLine("Connection to Redis failed.");
+                        };
+
+                        if (!connection.IsConnected)
+                        {
+                            Console.WriteLine("Did not connect to Redis.");
+                        }
+
+                        return connection;
+                    };
+                });*/
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -46,6 +77,8 @@ namespace ExtoxChat_Server
 
             app.UseEndpoints(endpoints =>
             {
+                // JS(cht.service.ts)�� ���� _hubConnection �ٷ� ���� �ּҿ� ��ġ �ؾ� ��(/hub)
+                endpoints.MapHub<ChatHub>("/chathub");
                 endpoints.MapControllers();
             });
         }
